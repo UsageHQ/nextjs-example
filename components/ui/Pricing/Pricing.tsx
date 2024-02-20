@@ -4,7 +4,11 @@ import Button from '@/components/ui/Button';
 import LogoCloud from '@/components/ui/LogoCloud';
 import type { Tables } from '@/types_db';
 import { getStripe } from '@/utils/stripe/client';
-import { checkoutWithStripe } from '@/utils/stripe/server';
+import {
+  checkoutWithStripe,
+  createStripePortalSubscriptionUpdate,
+  createStripePortalSubscriptionUpdateConfirm
+} from '@/utils/stripe/server';
 import { getErrorRedirect } from '@/utils/helpers';
 import { User } from '@supabase/supabase-js';
 import cn from 'classnames';
@@ -52,6 +56,24 @@ export default function Pricing({ user, products, subscription }: Props) {
     if (!user) {
       setPriceIdLoading(undefined);
       return router.push('/signin/signup');
+    }
+
+    if (subscription) {
+      let redirectUrl;
+      if (subscription.price_id === price.id) {
+        redirectUrl = await createStripePortalSubscriptionUpdate(
+          currentPath,
+          subscription.id
+        );
+      } else {
+        redirectUrl = await createStripePortalSubscriptionUpdateConfirm(
+          currentPath,
+          subscription.id,
+          price
+        );
+      }
+      router.push(redirectUrl);
+      return;
     }
 
     const { errorRedirect, sessionId } = await checkoutWithStripe(
@@ -187,9 +209,11 @@ export default function Pricing({ user, products, subscription }: Props) {
                       type="button"
                       loading={priceIdLoading === price.id}
                       onClick={() => handleStripeCheckout(price)}
-                      className="block w-full py-2 mt-8 text-sm font-semibold text-center text-white rounded-md hover:bg-zinc-900"
+                      className="w-full py-2 mt-8 text-sm font-semibold text-center rounded-md hover:bg-zinc-900"
                     >
-                      {subscription ? 'Manage' : 'Subscribe'}
+                      {subscription?.price_id === price.id
+                        ? 'Manage'
+                        : 'Subscribe'}
                     </Button>
                   </div>
                 </div>

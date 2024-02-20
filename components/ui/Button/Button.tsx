@@ -1,12 +1,10 @@
 'use client';
 
-import cn from 'classnames';
+import { cn } from '@/utils/cn';
 import React, { forwardRef, useRef, ButtonHTMLAttributes } from 'react';
 import { mergeRefs } from 'react-merge-refs';
 
 import LoadingDots from '@/components/ui/LoadingDots';
-
-import styles from './Button.module.css';
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'slim' | 'flat';
@@ -31,11 +29,11 @@ const Button = forwardRef<HTMLButtonElement, Props>((props, buttonRef) => {
   } = props;
   const ref = useRef(null);
   const rootClassName = cn(
-    styles.root,
+    'bg-white data-[active]:bg-zinc-600 text-zinc-800 cursor-pointer inline-flex px-10 rounded-sm leading-6  transition ease-in-out duration-150 shadow-sm font-semibold text-center justify-center uppercase py-4 border border-transparent items-center hover:bg-zinc-800 hover:text-white hover:border hover:border-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:ring-opacity-50',
     {
-      [styles.slim]: variant === 'slim',
-      [styles.loading]: loading,
-      [styles.disabled]: disabled
+      'py-2 transform-none normal-case': variant === 'slim',
+      'bg-zinc-700 text-zinc-500 border-zinc-600 cursor-not-allowed': loading,
+      'text-zinc-400 border-zinc-600 bg-zinc-700 cursor-not-allowed': disabled
     },
     className
   );

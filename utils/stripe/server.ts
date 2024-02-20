@@ -179,3 +179,153 @@ export async function createStripePortal(currentPath: string) {
     }
   }
 }
+
+export async function createStripePortalSubscriptionUpdate(
+  currentPath: string,
+  subscriptionId: string
+) {
+  try {
+    const supabase = createClient();
+    const {
+      error,
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      if (error) {
+        console.error(error);
+      }
+      throw new Error('Could not get user session.');
+    }
+
+    let customer;
+    try {
+      customer = await createOrRetrieveCustomer({
+        uuid: user.id || '',
+        email: user.email || ''
+      });
+    } catch (err) {
+      console.error(err);
+      throw new Error('Unable to access customer record.');
+    }
+
+    if (!customer) {
+      throw new Error('Could not get customer.');
+    }
+
+    try {
+      const { url } = await stripe.billingPortal.sessions.create({
+        customer,
+        return_url: getURL(currentPath),
+        flow_data: {
+          type: 'subscription_update',
+          subscription_update: {
+            subscription: subscriptionId
+          }
+        }
+      });
+      if (!url) {
+        throw new Error('Could not create billing portal');
+      }
+      return url;
+    } catch (err) {
+      console.error(err);
+      throw new Error('Could not create billing portal');
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(error);
+      return getErrorRedirect(
+        currentPath,
+        error.message,
+        'Please try again later or contact a system administrator.'
+      );
+    } else {
+      return getErrorRedirect(
+        currentPath,
+        'An unknown error occurred.',
+        'Please try again later or contact a system administrator.'
+      );
+    }
+  }
+}
+
+export async function createStripePortalSubscriptionUpdateConfirm(
+  currentPath: string,
+  subscriptionId: string,
+  price: Tables<'prices'>
+) {
+  try {
+    const supabase = createClient();
+    const {
+      error,
+      data: { user }
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      if (error) {
+        console.error(error);
+      }
+      throw new Error('Could not get user session.');
+    }
+
+    let customer;
+    try {
+      customer = await createOrRetrieveCustomer({
+        uuid: user.id || '',
+        email: user.email || ''
+      });
+    } catch (err) {
+      console.error(err);
+      throw new Error('Unable to access customer record.');
+    }
+
+    if (!customer) {
+      throw new Error('Could not get customer.');
+    }
+
+    try {
+      const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+      const subItem = subscription.items.data[0];
+      const { url } = await stripe.billingPortal.sessions.create({
+        customer,
+        return_url: getURL(currentPath),
+        flow_data: {
+          type: 'subscription_update_confirm',
+          subscription_update_confirm: {
+            subscription: subscriptionId,
+            items: [
+              {
+                id: subItem.id,
+                price: price.id,
+                quantity: 1
+              }
+            ]
+          }
+        }
+      });
+      if (!url) {
+        throw new Error('Could not create billing portal');
+      }
+      return url;
+    } catch (err) {
+      console.error(err);
+      throw new Error('Could not create billing portal');
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error(error);
+      return getErrorRedirect(
+        currentPath,
+        error.message,
+        'Please try again later or contact a system administrator.'
+      );
+    } else {
+      return getErrorRedirect(
+        currentPath,
+        'An unknown error occurred.',
+        'Please try again later or contact a system administrator.'
+      );
+    }
+  }
+}

@@ -7,6 +7,7 @@ import Logo from '@/components/icons/Logo';
 import { usePathname, useRouter } from 'next/navigation';
 import { getRedirectMethod } from '@/utils/auth-helpers/settings';
 import s from './Navbar.module.css';
+import CreditComponent from '@/components/ui/Chat/CreditComponent';
 
 interface NavlinksProps {
   user?: any;
@@ -22,6 +23,11 @@ export default function Navlinks({ user }: NavlinksProps) {
           <Logo />
         </Link>
         <nav className="ml-6 space-x-2 lg:block">
+          {user && (
+            <Link href="/chat" className={s.link}>
+              Chat
+            </Link>
+          )}
           <Link href="/" className={s.link}>
             Pricing
           </Link>
@@ -34,12 +40,15 @@ export default function Navlinks({ user }: NavlinksProps) {
       </div>
       <div className="flex justify-end space-x-8">
         {user ? (
-          <form onSubmit={(e) => handleRequest(e, SignOut, router)}>
-            <input type="hidden" name="pathName" value={usePathname()} />
-            <button type="submit" className={s.link}>
-              Sign out
-            </button>
-          </form>
+          <>
+            <CreditComponent />
+            <form onSubmit={(e) => handleRequest(e, SignOut, router)}>
+              <input type="hidden" name="pathName" value={usePathname()} />
+              <button type="submit" className={s.link}>
+                Sign out
+              </button>
+            </form>
+          </>
         ) : (
           <Link href="/signin" className={s.link}>
             Sign In
