@@ -6,15 +6,26 @@ import {
 } from '@/components/ui/Popover';
 import { StarIcon } from '@radix-ui/react-icons';
 import React from 'react';
+import { getCredit } from '@/app/chat/actions';
+import { useQuery } from '@tanstack/react-query';
 
 export default function CreditComponent() {
+  const creditQuery = useQuery({
+    queryKey: ['credit'],
+    queryFn: async () => {
+      return await getCredit();
+    }
+  });
+
+  const credit = creditQuery.data ?? '';
+
   return (
     <Popover>
       <PopoverTrigger asChild>
         <Button variant="slim">
           <div className="flex items-center space-x-2">
             <StarIcon />
-            <span className="text-sm font-medium">450 credits left</span>
+            <span className="text-sm font-medium">{credit} credits left</span>
           </div>
         </Button>
       </PopoverTrigger>

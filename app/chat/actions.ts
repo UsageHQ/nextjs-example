@@ -73,3 +73,17 @@ export async function setSessionName(sessionId: string, name: string) {
 
   return await UsageNext.setSessionName(sessionId, name);
 }
+
+export async function getCredit() {
+  const supabase = createClient();
+  const {
+    data: { user }
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    throw new Error('Needs auth');
+  }
+  // Uncomment to add a quick free credit
+  // await UsageNext.addCustomerFreeCredit(user.id, 500);
+  return await UsageNext.getCustomerFreeCredit(user.id);
+}
