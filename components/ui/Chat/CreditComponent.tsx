@@ -17,7 +17,7 @@ export default function CreditComponent() {
     }
   });
 
-  const credit = creditQuery.data ?? '';
+  const credit = creditQuery.data ? parseFloat(creditQuery.data) : '';
 
   return (
     <Popover>
@@ -33,7 +33,7 @@ export default function CreditComponent() {
         <div className="grid gap-2">
           <div className="space-y-2">
             <p>Remaining Credit</p>
-            <h1 className="font-bold leading-none">450</h1>
+            <h1 className="font-bold leading-none">{credit}</h1>
             <p className="text-sm text-muted-foreground">
               Valid until Dec 31, 2023
             </p>
