@@ -1,7 +1,7 @@
 'use server';
 import { ChatContext } from '@/types/chat';
 import { createClient } from '@/utils/supabase/server';
-import * as UsageNext from '@usagehq/sdk-next';
+import * as Usage from '@usagehq/sdk-next';
 
 export async function getSessions() {
   const supabase = createClient();
@@ -13,7 +13,7 @@ export async function getSessions() {
     throw new Error('Needs auth');
   }
 
-  return await UsageNext.getSessions(user.id);
+  return await Usage.getSessions(user.id);
 }
 
 export async function createSession() {
@@ -26,7 +26,7 @@ export async function createSession() {
     throw new Error('Needs auth');
   }
 
-  return await UsageNext.createSession(user.id);
+  return await Usage.createSession(user.id);
 }
 
 export async function queue(
@@ -44,7 +44,7 @@ export async function queue(
     throw new Error('Needs auth');
   }
 
-  return await UsageNext.queue(user.id, sessionId, {
+  return await Usage.queue(user.id, sessionId, {
     url: process.env.LLM_URL ?? 'http://localhost:11434/api/chat',
     body: {
       model: process.env.LLM_MODEL ?? 'dolphin-phi',
@@ -71,7 +71,7 @@ export async function setSessionName(sessionId: string, name: string) {
   //   throw new Error('Needs auth');
   // }
 
-  return await UsageNext.setSessionName(sessionId, name);
+  return await Usage.setSessionName(sessionId, name);
 }
 
 export async function getCredit() {
@@ -84,6 +84,9 @@ export async function getCredit() {
     throw new Error('Needs auth');
   }
   // Uncomment to add a quick free credit
-  // await UsageNext.addCustomerFreeCredit(user.id, 500);
-  return await UsageNext.getCustomerFreeCredit(user.id);
+  // await Usage.addCustomerFreeCredit(user.id, 500);
+  return {
+    free: await Usage.getCustomerFreeCredit(user.id),
+    paid: await Usage.getCustomerPaidCredit(user.id)
+  };
 }

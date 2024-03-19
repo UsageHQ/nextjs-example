@@ -3,6 +3,7 @@ import { stripe } from '@/utils/stripe/config';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import type { Database, Tables, TablesInsert } from 'types_db';
+import * as Usage from '@usagehq/sdk-next';
 
 type Product = Tables<'products'>;
 type Price = Tables<'prices'>;
@@ -88,7 +89,8 @@ const deletePriceRecord = async (price: Stripe.Price) => {
     .from('prices')
     .delete()
     .eq('id', price.id);
-  if (deletionError) throw new Error(`Price deletion failed: ${deletionError.message}`);
+  if (deletionError)
+    throw new Error(`Price deletion failed: ${deletionError.message}`);
   console.log(`Price deleted: ${price.id}`);
 };
 
@@ -98,7 +100,9 @@ const upsertCustomerToSupabase = async (uuid: string, customerId: string) => {
     .upsert([{ id: uuid, stripe_customer_id: customerId }]);
 
   if (upsertError)
-    throw new Error(`Supabase customer record creation failed: ${upsertError.message}`);
+    throw new Error(
+      `Supabase customer record creation failed: ${upsertError.message}`
+    );
 
   return customerId;
 };
@@ -205,7 +209,8 @@ const copyBillingDetailsToCustomer = async (
       payment_method: { ...payment_method[payment_method.type] }
     })
     .eq('id', uuid);
-  if (updateError) throw new Error(`Customer update failed: ${updateError.message}`);
+  if (updateError)
+    throw new Error(`Customer update failed: ${updateError.message}`);
 };
 
 const manageSubscriptionStatusChange = async (
@@ -267,7 +272,9 @@ const manageSubscriptionStatusChange = async (
     .from('subscriptions')
     .upsert([subscriptionData]);
   if (upsertError)
-    throw new Error(`Subscription insert/update failed: ${upsertError.message}`);
+    throw new Error(
+      `Subscription insert/update failed: ${upsertError.message}`
+    );
   console.log(
     `Inserted/updated subscription [${subscription.id}] for user [${uuid}]`
   );
@@ -282,11 +289,38 @@ const manageSubscriptionStatusChange = async (
     );
 };
 
+const processInvoice = async (invoice: Stripe.Invoice) => {
+  console.log(1234);
+  // Get customer's UUID from mapping table.
+  const { data: customerData, error: noCustomerError } = await supabaseAdmin
+    .from('customers')
+    .select('id')
+    .eq('stripe_customer_id', invoice.customer as string)
+    .single();
+
+  if (noCustomerError)
+    throw new Error(`Customer lookup failed: ${noCustomerError.message}`);
+
+  const { id: uuid } = customerData!;
+
+  if (!invoice.subscription || typeof invoice.subscription !== 'string') {
+    throw new Error(`Invoices that are not for subscriptions are WIP.`);
+  }
+
+  // TODO: Determine the amount of credit for the subscription
+  // const subscription = await stripe.subscriptions.retrieve(
+  //   invoice.subscription
+  // );
+  const creditAmount = 2500;
+  await Usage.addCustomerPaidCredit(uuid, creditAmount);
+};
+
 export {
   upsertProductRecord,
   upsertPriceRecord,
   deleteProductRecord,
   deletePriceRecord,
   createOrRetrieveCustomer,
-  manageSubscriptionStatusChange
+  manageSubscriptionStatusChange,
+  processInvoice
 };

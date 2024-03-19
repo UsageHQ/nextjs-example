@@ -17,7 +17,12 @@ export default function CreditComponent() {
     }
   });
 
-  const credit = creditQuery.data ? parseFloat(creditQuery.data) : '';
+  const paidCredit = creditQuery.data?.paid
+    ? parseFloat(creditQuery.data.paid)
+    : '';
+  const freeCredit = creditQuery.data?.free
+    ? parseFloat(creditQuery.data.free)
+    : '';
 
   return (
     <Popover>
@@ -25,7 +30,9 @@ export default function CreditComponent() {
         <Button variant="slim">
           <div className="flex items-center space-x-2">
             <StarIcon />
-            <span className="text-sm font-medium">{credit} credits left</span>
+            <span className="text-sm font-medium">
+              {paidCredit} credits left
+            </span>
           </div>
         </Button>
       </PopoverTrigger>
@@ -33,7 +40,9 @@ export default function CreditComponent() {
         <div className="grid gap-2">
           <div className="space-y-2">
             <p>Remaining Credit</p>
-            <h1 className="font-bold leading-none">{credit}</h1>
+            <p className="font-bold leading-none">{paidCredit}</p>
+            <p>Free Credit</p>
+            <p className="font-bold leading-none">{freeCredit}</p>
             <p className="text-sm text-muted-foreground">
               Valid until Dec 31, 2023
             </p>

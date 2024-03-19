@@ -5,7 +5,8 @@ import {
   upsertPriceRecord,
   manageSubscriptionStatusChange,
   deleteProductRecord,
-  deletePriceRecord
+  deletePriceRecord,
+  processInvoice
 } from '@/utils/supabase/admin';
 
 const relevantEvents = new Set([
@@ -18,7 +19,8 @@ const relevantEvents = new Set([
   'checkout.session.completed',
   'customer.subscription.created',
   'customer.subscription.updated',
-  'customer.subscription.deleted'
+  'customer.subscription.deleted',
+  'invoice.paid'
 ]);
 
 export async function POST(req: Request) {
@@ -63,6 +65,9 @@ export async function POST(req: Request) {
             subscription.customer as string,
             event.type === 'customer.subscription.created'
           );
+          break;
+        case 'invoice.paid':
+          processInvoice(event.data.object as Stripe.Invoice);
           break;
         case 'checkout.session.completed':
           const checkoutSession = event.data.object as Stripe.Checkout.Session;
